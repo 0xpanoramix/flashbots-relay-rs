@@ -1,6 +1,7 @@
 pub mod constants;
 pub mod types;
 
+use ethers_signers::LocalWallet;
 use reqwest::{Client, ClientBuilder};
 
 #[derive(Clone, Debug)]
@@ -18,6 +19,10 @@ impl Requester {
             client,
             base_url: cfg.base_url,
         }
+    }
+
+    pub fn get_user_stats(&self, private_key: LocalWallet) {
+
     }
 }
 
