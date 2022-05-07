@@ -1,4 +1,6 @@
-#[derive(Serialize, Deserialize)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FlashbotsUserStats {
     is_high_priority: bool,
     all_time_miner_payments: String,
