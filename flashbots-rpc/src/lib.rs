@@ -1,4 +1,5 @@
 pub mod constants;
+pub mod types;
 
 use reqwest::{Client, ClientBuilder};
 
