@@ -23,20 +23,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let hashed_body_res: [u8; 32] = hashed_body.as_slice().try_into().expect("wrong length");
 
     let hashed_body_res_hex = format!("0x{}", (hex::encode(hashed_body_res)));
-    let text_and_hash_payload = format!("\x19Ethereum Signed Message:\n{}{}", hashed_body_res_hex.len(), hashed_body_res_hex);
 
-    let mut new_hasher = Keccak256::new();
-    new_hasher.update(text_and_hash_payload.as_bytes());
-    let signature_payload = new_hasher.finalize();
-    let signature_payload_res: [u8; 32] = signature_payload.as_slice().try_into().expect("wrong length");
-    println!("{:?}", signature_payload_res);
-
-    let payload_signature = wallet.sign_message(signature_payload_res).await?;
-    println!("{:?}", payload_signature.to_string());
+    let payload_signature = wallet.sign_message(hashed_body_res_hex).await?;
 
     let flashbots_signature = format!("{:#?}:0x{}", wallet.address(), payload_signature.to_string());
+    println!("{:?}", flashbots_signature);
 
-    let _res = reqwest::Client::new()
+    let res = reqwest::Client::new()
         .post("https://relay.flashbots.net")
         .header("X-Flashbots-Signature", flashbots_signature)
         .header("Content-Type", "application/json")
@@ -45,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .send()
         .await?;
 
-    // println!("{:#?}", res);
+    println!("{:#?}", res.text().await?);
 
     Ok(())
 }
