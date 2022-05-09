@@ -12,13 +12,15 @@ use crate::types::{
     SendBundleResponse, UserStats,
 };
 
+/// The object used to interact with the Flashbots' endpoint.
+/// Contains both the client and the endpoint to target.
 #[derive(Clone, Debug)]
 pub struct Requester {
     client: Client,
     base_url: String,
 }
 
-// TODO: Handle errors in methods.
+/// Creates a default requester connected to the mai network.
 impl Default for Requester {
     fn default() -> Self {
         let mut client_builder = ClientBuilder::new();
@@ -36,6 +38,7 @@ impl Default for Requester {
 }
 
 impl Requester {
+    /// Signs the JSON-RPC 2.0 request payload using the user's private key.
     async fn sign_request_payload(
         &self,
         wallet: &LocalWallet,
@@ -55,6 +58,20 @@ impl Requester {
         Ok(signature.to_string())
     }
 
+    /// Creates a new request payload using the parameters provided by the user.
+    /// # Example
+    ///
+    /// For the `flashbots_getUserStats` endpoint it will return :
+    /// ```json
+    /// {
+    ///   "jsonrpc": "2.0",
+    ///   "id": 1,
+    ///   "method": "flashbots_getUserStats",
+    ///   "params": [
+    ///       0x1,
+    ///   ]
+    /// }
+    /// ```
     fn new_request_payload(&self, method: &str, params: Vec<Value>) -> Value {
         json!({
             "id": 1,
@@ -64,6 +81,7 @@ impl Requester {
         })
     }
 
+    /// Creates the request payload, signs it using the user's private key and submit the HTTP call.
     async fn call_with_flashbots_signature(
         &self,
         method: &str,
@@ -90,6 +108,10 @@ impl Requester {
         Ok(response)
     }
 
+    /// Returns a quick summary of how a searcher is performing in the relay,
+    /// including their reputation-based priority.
+    ///
+    /// It is currently updated once every hour.
     pub async fn get_user_stats(
         &self,
         private_key: &str,
@@ -112,6 +134,10 @@ impl Requester {
         Ok(user_stats)
     }
 
+    /// Returns stats for a single bundle.
+    ///
+    /// You must provide a blockNumber and the bundleHash, and the signing address must be the
+    /// same as the one who submitted the bundle.
     pub async fn get_bundle_stats(
         &self,
         private_key: &str,
@@ -133,6 +159,9 @@ impl Requester {
         Ok(bundle_stats)
     }
 
+    /// Used to send a single transaction to Flashbots.
+    ///
+    /// Flashbots will attempt to send the transaction to miners for the next 25 blocks.
     pub async fn send_private_transaction(
         &self,
         private_key: &str,
@@ -154,6 +183,10 @@ impl Requester {
         Ok(tx_hash)
     }
 
+    /// Stops private transactions from being submitted for future blocks.
+    ///
+    /// A transaction can only be cancelled if the request is signed by the same
+    /// key as the `eth_sendPrivateTransaction` call submitting the transaction in first place.
     pub async fn cancel_private_transaction(
         &self,
         private_key: &str,
@@ -175,6 +208,7 @@ impl Requester {
         Ok(result)
     }
 
+    /// Used to send your bundles to the relay.
     pub async fn send_bundle(
         &self,
         private_key: &str,
@@ -198,6 +232,8 @@ impl Requester {
         Ok(result)
     }
 
+    /// Used to simulate a bundle against a specific block number, including simulating
+    /// a bundle at the top of the next block.
     pub async fn call_bundle(
         &self,
         private_key: &str,
@@ -222,7 +258,6 @@ impl Requester {
     }
 }
 
-/// TODO: Migrate tests to testnet.
 #[cfg(test)]
 mod tests {
     use crate::constants::FLASHBOTS_RELAY_RPC_ENDPOINT;
