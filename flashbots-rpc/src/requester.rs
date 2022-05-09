@@ -8,7 +8,8 @@ use crate::constants::{FLASHBOTS_AUTH_HEADER_NAME, FLASHBOTS_RELAY_RPC_ENDPOINT}
 use crate::types::{
     BundleStats, CallBundleResponse, FlashbotsCallBundleParam,
     FlashbotsCancelPrivateTransactionParam, FlashbotsEthResponse, FlashbotsGetBundleStatsParam,
-    FlashbotsSendBundleParam, FlashbotsSendPrivateTransactionParam, SendBundleResponse, UserStats,
+    FlashbotsSendBundleParam, FlashbotsSendPrivateTransactionParam, RelayResponse,
+    SendBundleResponse, UserStats,
 };
 
 #[derive(Clone, Debug)]
@@ -93,7 +94,7 @@ impl Requester {
         &self,
         private_key: &str,
         block_number: u64,
-    ) -> Result<UserStats, Box<dyn std::error::Error>> {
+    ) -> Result<RelayResponse<UserStats>, Box<dyn std::error::Error>> {
         // Loads the ethereum wallet.
         let wallet = private_key.parse::<LocalWallet>()?;
 
@@ -107,7 +108,7 @@ impl Requester {
             .await?;
 
         // Parse the response and return the data.
-        let user_stats: UserStats = response.json().await?;
+        let user_stats: RelayResponse<UserStats> = response.json().await?;
         Ok(user_stats)
     }
 
@@ -115,7 +116,7 @@ impl Requester {
         &self,
         private_key: &str,
         params: &FlashbotsGetBundleStatsParam,
-    ) -> Result<BundleStats, Box<dyn std::error::Error>> {
+    ) -> Result<RelayResponse<BundleStats>, Box<dyn std::error::Error>> {
         // Loads the ethereum wallet.
         let wallet = private_key.parse::<LocalWallet>()?;
 
@@ -128,7 +129,7 @@ impl Requester {
             .await?;
 
         // Parse the response and return the data.
-        let bundle_stats: BundleStats = response.json().await?;
+        let bundle_stats: RelayResponse<BundleStats> = response.json().await?;
         Ok(bundle_stats)
     }
 
@@ -136,7 +137,7 @@ impl Requester {
         &self,
         private_key: &str,
         params: &FlashbotsSendPrivateTransactionParam,
-    ) -> Result<FlashbotsEthResponse<String>, Box<dyn std::error::Error>> {
+    ) -> Result<RelayResponse<FlashbotsEthResponse<String>>, Box<dyn std::error::Error>> {
         // Loads the ethereum wallet.
         let wallet = private_key.parse::<LocalWallet>()?;
 
@@ -149,7 +150,7 @@ impl Requester {
             .await?;
 
         // Parse the response and return the data.
-        let tx_hash: FlashbotsEthResponse<String> = response.json().await?;
+        let tx_hash: RelayResponse<FlashbotsEthResponse<String>> = response.json().await?;
         Ok(tx_hash)
     }
 
@@ -157,7 +158,7 @@ impl Requester {
         &self,
         private_key: &str,
         params: &FlashbotsCancelPrivateTransactionParam,
-    ) -> Result<FlashbotsEthResponse<bool>, Box<dyn std::error::Error>> {
+    ) -> Result<RelayResponse<FlashbotsEthResponse<bool>>, Box<dyn std::error::Error>> {
         // Loads the ethereum wallet.
         let wallet = private_key.parse::<LocalWallet>()?;
 
@@ -170,7 +171,7 @@ impl Requester {
             .await?;
 
         // Parse the response and return the data.
-        let result: FlashbotsEthResponse<bool> = response.json().await?;
+        let result: RelayResponse<FlashbotsEthResponse<bool>> = response.json().await?;
         Ok(result)
     }
 
@@ -178,7 +179,8 @@ impl Requester {
         &self,
         private_key: &str,
         params: &FlashbotsSendBundleParam,
-    ) -> Result<FlashbotsEthResponse<SendBundleResponse>, Box<dyn std::error::Error>> {
+    ) -> Result<RelayResponse<FlashbotsEthResponse<SendBundleResponse>>, Box<dyn std::error::Error>>
+    {
         // Loads the ethereum wallet.
         let wallet = private_key.parse::<LocalWallet>()?;
 
@@ -191,7 +193,8 @@ impl Requester {
             .await?;
 
         // Parse the response and return the data.
-        let result: FlashbotsEthResponse<SendBundleResponse> = response.json().await?;
+        let result: RelayResponse<FlashbotsEthResponse<SendBundleResponse>> =
+            response.json().await?;
         Ok(result)
     }
 
@@ -199,7 +202,8 @@ impl Requester {
         &self,
         private_key: &str,
         params: &FlashbotsCallBundleParam,
-    ) -> Result<FlashbotsEthResponse<CallBundleResponse>, Box<dyn std::error::Error>> {
+    ) -> Result<RelayResponse<FlashbotsEthResponse<CallBundleResponse>>, Box<dyn std::error::Error>>
+    {
         // Loads the ethereum wallet.
         let wallet = private_key.parse::<LocalWallet>()?;
 
@@ -212,7 +216,8 @@ impl Requester {
             .await?;
 
         // Parse the response and return the data.
-        let result: FlashbotsEthResponse<CallBundleResponse> = response.json().await?;
+        let result: RelayResponse<FlashbotsEthResponse<CallBundleResponse>> =
+            response.json().await?;
         Ok(result)
     }
 }
@@ -222,7 +227,7 @@ impl Requester {
 mod tests {
     use crate::constants::FLASHBOTS_RELAY_RPC_ENDPOINT;
     use crate::requester::Requester;
-    use crate::types::{FlashbotsGetBundleStatsParam, FlashbotsSendBundleParam};
+    use crate::types::{FlashbotsGetBundleStatsParam, FlashbotsSendBundleParam, RelayResponse};
 
     #[test]
     fn it_can_instantiate_requester_with_default_configuration() {
@@ -298,6 +303,33 @@ mod tests {
         let result = requester.send_bundle(private_key, &params).await;
 
         assert_eq!(result.is_err(), false);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn it_fails_to_send_invalid_bundle() -> Result<(), Box<dyn std::error::Error>> {
+        let requester = Requester::default();
+        let private_key = "dcf2cbdd171a21c480aa7f53d77f31bb102282b3ff099c78e3118b37348c72f7";
+
+        let params = FlashbotsSendBundleParam {
+            txs: vec!["0xdeadbeef".to_string()],
+            block_number: "0xcaa6fa".to_string(),
+            min_timestamp: None,
+            max_timestamp: None,
+            reverting_tx_hashes: None,
+        };
+
+        let result = requester.send_bundle(private_key, &params).await;
+        assert_eq!(result.is_err(), false);
+
+        let response = result.unwrap();
+        match response {
+            RelayResponse::Error(e) => {
+                assert_eq!(e.error.message, "unable to decode bundle")
+            }
+            RelayResponse::Result(_) => (),
+        }
+
         Ok(())
     }
 }

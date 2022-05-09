@@ -1,6 +1,14 @@
+use crate::error::RelayError;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum RelayResponse<T> {
+    Error(RelayError),
+    Result(T),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct FlashbotsEthResponse<T> {
     pub jsonrpc: String,
     pub id: u64,
@@ -94,7 +102,7 @@ pub struct FlashbotsSendBundleParam {
 }
 
 /// The response for eth_sendBundle.
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SendBundleResponse {
     #[serde(rename = "bundleHash")]
     pub bundle_hash: String,
