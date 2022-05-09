@@ -5,7 +5,11 @@ use serde_json::{json, Value};
 use sha3::{Digest, Keccak256};
 
 use crate::constants::{FLASHBOTS_AUTH_HEADER_NAME, FLASHBOTS_RELAY_RPC_ENDPOINT};
-use crate::types::{BundleStats, FlashbotsGetBundleStatsParam, UserStats};
+use crate::types::{
+    BundleStats, CancelledPrivateTransactionResponse, FlashbotsCancelPrivateTransactionParam,
+    FlashbotsGetBundleStatsParam, FlashbotsSendPrivateTransactionParam,
+    SentPrivateTransactionResponse, UserStats,
+};
 
 #[derive(Clone, Debug)]
 pub struct Requester {
@@ -13,6 +17,7 @@ pub struct Requester {
     base_url: String,
 }
 
+// TODO: Handle errors in methods.
 impl Default for Requester {
     fn default() -> Self {
         let mut client_builder = ClientBuilder::new();
@@ -115,13 +120,7 @@ impl Requester {
         let wallet = private_key.parse::<LocalWallet>()?;
 
         // Prepare the payload for POST request.
-        // let request_params: Vec<Value> = vec![
-        //    serde_json::to_value(&params.block_hash).unwrap(),
-        //    serde_json::to_value(&params.block_number).unwrap(),
-        // ];
-        let request_params: Vec<Value> = vec![
-            serde_json::to_value(&params).unwrap(),
-        ];
+        let request_params: Vec<Value> = vec![serde_json::to_value(&params).unwrap()];
 
         // Call te relay.
         let response = self
@@ -131,6 +130,48 @@ impl Requester {
         // Parse the response and return the data.
         let bundle_stats: BundleStats = response.json().await?;
         Ok(bundle_stats)
+    }
+
+    pub async fn send_private_transaction(
+        &self,
+        private_key: &str,
+        params: &FlashbotsSendPrivateTransactionParam,
+    ) -> Result<SentPrivateTransactionResponse, Box<dyn std::error::Error>> {
+        // Loads the ethereum wallet.
+        let wallet = private_key.parse::<LocalWallet>()?;
+
+        // Prepare the payload for POST request.
+        let request_params: Vec<Value> = vec![serde_json::to_value(&params).unwrap()];
+
+        // Call te relay.
+        let response = self
+            .call_with_flashbots_signature("eth_sendPrivateTransaction", &wallet, request_params)
+            .await?;
+
+        // Parse the response and return the data.
+        let tx_hash: SentPrivateTransactionResponse = response.json().await?;
+        Ok(tx_hash)
+    }
+
+    pub async fn cancel_private_transaction(
+        &self,
+        private_key: &str,
+        params: &FlashbotsCancelPrivateTransactionParam,
+    ) -> Result<CancelledPrivateTransactionResponse, Box<dyn std::error::Error>> {
+        // Loads the ethereum wallet.
+        let wallet = private_key.parse::<LocalWallet>()?;
+
+        // Prepare the payload for POST request.
+        let request_params: Vec<Value> = vec![serde_json::to_value(&params).unwrap()];
+
+        // Call te relay.
+        let response = self
+            .call_with_flashbots_signature("eth_cancelPrivateTransaction", &wallet, request_params)
+            .await?;
+
+        // Parse the response and return the data.
+        let result: CancelledPrivateTransactionResponse = response.json().await?;
+        Ok(result)
     }
 }
 
@@ -169,5 +210,34 @@ mod tests {
         let result = requester.get_bundle_stats(private_key, &params).await;
 
         assert_eq!(result.is_err(), false);
+    }
+
+    #[tokio::test]
+    async fn it_can_send_private_transaction() -> Result<(), Box<dyn std::error::Error>> {
+        /*
+        let requester = Requester::default();
+        let private_key = "dcf2cbdd171a21c480aa7f53d77f31bb102282b3ff099c78e3118b37348c72f7";
+
+        let wallet = private_key
+            .parse::<LocalWallet>()?;
+
+        // create a transaction
+        let tx = TransactionRequest::new()
+            .to("vitalik.eth") // this will use ENS
+            .value(10000).into();
+
+        // sign it
+        let signature = wallet.sign_transaction(&tx).await?;
+
+        let params = FlashbotsSendPrivateTransactionParam {
+            tx: format!("0x{}", signature.to_string()),
+            max_block_number: None,
+            preferences: None
+        };
+        let result = requester.send_private_transaction(private_key, &params).await;
+
+        assert_eq!(result.is_err(), false);
+        */
+        Ok(())
     }
 }

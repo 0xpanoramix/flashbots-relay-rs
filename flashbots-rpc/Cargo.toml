@@ -14,3 +14,6 @@ futures = "0.3"
 ethers-signers = "0.6.2"
 sha3 = "0.10.1"
 hex = "0.4.3"
+
+[dev-dependencies]
+ethers-core = "0.6.3"
