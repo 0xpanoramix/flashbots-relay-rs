@@ -49,6 +49,15 @@ impl Requester {
         Ok(signature.to_string())
     }
 
+    fn new_request_payload(&self, method: &str, params: Vec<Value>) -> Value {
+        json!({
+            "id": 1,
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": params,
+        })
+    }
+
     pub async fn get_user_stats(
         &self,
         private_key: &str,
@@ -58,15 +67,9 @@ impl Requester {
         let wallet = private_key.parse::<LocalWallet>()?;
 
         // Prepare the payload for POST request.
-        let hex_block_number = format!("0x{:x}", block_number);
-        let request_payload = json!({
-            "id": 1,
-            "jsonrpc": "2.0",
-            "method": "flashbots_getUserStats",
-            "params": [
-                hex_block_number,
-            ],
-        });
+        let request_params: Vec<Value> =
+            vec![serde_json::to_value(format!("0x{:x}", block_number)).unwrap()];
+        let request_payload = self.new_request_payload("flashbots_getUserStats", request_params);
 
         // Sign the payload.
         let payload_signature = self.sign_request_payload(&wallet, &request_payload).await?;
@@ -95,15 +98,11 @@ impl Requester {
         let wallet = private_key.parse::<LocalWallet>()?;
 
         // Prepare the payload for POST request.
-        let request_payload = json!({
-            "id": 1,
-            "jsonrpc": "2.0",
-            "method": "flashbots_getBundleStats",
-            "params": [
-                params.block_hash,
-                params.block_number,
-            ],
-        });
+        let request_params: Vec<Value> = vec![
+            serde_json::to_value(&params.block_hash).unwrap(),
+            serde_json::to_value(&params.block_number).unwrap(),
+        ];
+        let request_payload = self.new_request_payload("flashbots_getBundleStats", request_params);
 
         // Sign the payload.
         let payload_signature = self.sign_request_payload(&wallet, &request_payload).await?;
