@@ -7,12 +7,6 @@ pub struct FlashbotsEthResponse<T> {
     pub result: T,
 }
 
-#[derive(Deserialize, Debug)]
-pub struct SendBundleResponse {
-    #[serde(rename = "bundleHash")]
-    pub bundle_hash: String,
-}
-
 /// The response for flashbots_getUserStats.
 #[derive(Deserialize, Debug)]
 pub struct UserStats {
@@ -97,4 +91,98 @@ pub struct FlashbotsSendBundleParam {
 
     #[serde(rename = "revertingTxHashes", skip_serializing_if = "Option::is_none")]
     pub reverting_tx_hashes: Option<Vec<String>>,
+}
+
+/// The response for eth_sendBundle.
+#[derive(Deserialize, Debug)]
+pub struct SendBundleResponse {
+    #[serde(rename = "bundleHash")]
+    pub bundle_hash: String,
+}
+
+/// The params used to query eth_callBundle.
+#[derive(Serialize, Debug)]
+pub struct FlashbotsCallBundleParam {
+    pub txs: Vec<String>,
+
+    #[serde(rename = "blockNumber")]
+    pub block_number: String,
+
+    #[serde(rename = "stateBlockNumber")]
+    pub state_block_number: String,
+
+    #[serde(rename = "timestamp", skip_serializing_if = "Option::is_none")]
+    pub timestamp: Option<i64>,
+
+    #[serde(rename = "timeout", skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<i64>,
+
+    #[serde(rename = "gasLimit", skip_serializing_if = "Option::is_none")]
+    pub gas_limit: Option<u64>,
+
+    #[serde(rename = "difficulty", skip_serializing_if = "Option::is_none")]
+    pub difficulty: Option<u64>,
+
+    #[serde(rename = "baseFee", skip_serializing_if = "Option::is_none")]
+    pub base_fee: Option<u64>,
+}
+
+/// The response for eth_callBundle.
+#[derive(Deserialize, Debug)]
+pub struct CallBundleResponse {
+    #[serde(rename = "bundleGasPrice")]
+    pub bundle_gas_price: String,
+
+    #[serde(rename = "bundleHash")]
+    pub bundle_hash: String,
+
+    #[serde(rename = "coinbaseDiff")]
+    pub coinbase_diff: String,
+
+    #[serde(rename = "ethSentToCoinbase")]
+    pub eth_sent_to_coinbase: String,
+
+    #[serde(rename = "gasFees")]
+    pub gas_fees: String,
+
+    pub results: Vec<CallBundleResult>,
+
+    #[serde(rename = "stateBlockNumber")]
+    pub state_block_number: i64,
+
+    #[serde(rename = "totalGasUsed")]
+    pub total_gas_used: i64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct CallBundleResult {
+    #[serde(rename = "coinbaseDiff")]
+    pub coinbase_diff: String,
+
+    #[serde(rename = "ethSentToCoinbase")]
+    pub eth_sent_to_coinbase: String,
+
+    #[serde(rename = "fromAddress")]
+    pub from_address: String,
+
+    #[serde(rename = "gasFees")]
+    pub gas_fees: String,
+
+    #[serde(rename = "gasPrice")]
+    pub gas_price: String,
+
+    #[serde(rename = "gasUsed")]
+    pub gas_used: i64,
+
+    #[serde(rename = "toAddress")]
+    pub to_address: String,
+
+    #[serde(rename = "txHash")]
+    pub tx_hash: String,
+
+    pub value: String,
+
+    pub error: String,
+
+    pub revert: String,
 }

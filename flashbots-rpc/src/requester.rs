@@ -6,9 +6,9 @@ use sha3::{Digest, Keccak256};
 
 use crate::constants::{FLASHBOTS_AUTH_HEADER_NAME, FLASHBOTS_RELAY_RPC_ENDPOINT};
 use crate::types::{
-    BundleStats, FlashbotsCancelPrivateTransactionParam, FlashbotsEthResponse,
-    FlashbotsGetBundleStatsParam, FlashbotsSendBundleParam, FlashbotsSendPrivateTransactionParam,
-    SendBundleResponse, UserStats,
+    BundleStats, CallBundleResponse, FlashbotsCallBundleParam,
+    FlashbotsCancelPrivateTransactionParam, FlashbotsEthResponse, FlashbotsGetBundleStatsParam,
+    FlashbotsSendBundleParam, FlashbotsSendPrivateTransactionParam, SendBundleResponse, UserStats,
 };
 
 #[derive(Clone, Debug)]
@@ -194,6 +194,27 @@ impl Requester {
         let result: FlashbotsEthResponse<SendBundleResponse> = response.json().await?;
         Ok(result)
     }
+
+    pub async fn call_bundle(
+        &self,
+        private_key: &str,
+        params: &FlashbotsCallBundleParam,
+    ) -> Result<FlashbotsEthResponse<CallBundleResponse>, Box<dyn std::error::Error>> {
+        // Loads the ethereum wallet.
+        let wallet = private_key.parse::<LocalWallet>()?;
+
+        // Prepare the payload for POST request.
+        let request_params: Vec<Value> = vec![serde_json::to_value(&params).unwrap()];
+
+        // Call te relay.
+        let response = self
+            .call_with_flashbots_signature("eth_callBundle", &wallet, request_params)
+            .await?;
+
+        // Parse the response and return the data.
+        let result: FlashbotsEthResponse<CallBundleResponse> = response.json().await?;
+        Ok(result)
+    }
 }
 
 /// TODO: Migrate tests to testnet.
@@ -201,7 +222,7 @@ impl Requester {
 mod tests {
     use crate::constants::FLASHBOTS_RELAY_RPC_ENDPOINT;
     use crate::requester::Requester;
-    use crate::types::FlashbotsGetBundleStatsParam;
+    use crate::types::{FlashbotsGetBundleStatsParam, FlashbotsSendBundleParam};
 
     #[test]
     fn it_can_instantiate_requester_with_default_configuration() {
@@ -259,6 +280,24 @@ mod tests {
 
         assert_eq!(result.is_err(), false);
         */
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn it_can_send_bundle() -> Result<(), Box<dyn std::error::Error>> {
+        let requester = Requester::default();
+        let private_key = "dcf2cbdd171a21c480aa7f53d77f31bb102282b3ff099c78e3118b37348c72f7";
+
+        let params = FlashbotsSendBundleParam {
+            txs: vec!["0xf86b808459682efe825208944592d8f8d7b001e72cb26a73e4fa1806a51ac79d880de0b6b3a7640000802ea0e96dfa6f3ae80f7b55e016bc9b140762cb86e2c08bfac6b20c5b6035bdf36611a00fdb494e6f842fcbc0bddb571c5035148446a77354a90e7dc4b0e9feafabaeda".to_string()],
+            block_number: "0xcaa6fa".to_string(),
+            min_timestamp: None,
+            max_timestamp: None,
+            reverting_tx_hashes: None
+        };
+        let result = requester.send_bundle(private_key, &params).await;
+
+        assert_eq!(result.is_err(), false);
         Ok(())
     }
 }
