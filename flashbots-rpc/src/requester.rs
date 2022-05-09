@@ -128,7 +128,6 @@ impl Requester {
         // Parse the response and return the data.
         let bundle_stats: BundleStats = response.json().await?;
 
-        println!("{:?}", bundle_stats);
         Ok(bundle_stats)
     }
 }
