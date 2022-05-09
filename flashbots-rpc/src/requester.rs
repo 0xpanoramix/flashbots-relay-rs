@@ -338,6 +338,18 @@ mod tests {
         let result = requester.send_bundle(private_key, &params).await;
 
         assert_eq!(result.is_err(), false);
+
+        let data = result.unwrap();
+
+        match data {
+            RelayResponse::Error(_) => {}
+            RelayResponse::Result(d) => {
+                assert_eq!(
+                    d.result.bundle_hash,
+                    "0xcf85838f6ef4946f285b991a70c9732902b70a98f9615754a406651e59bbcaec",
+                );
+            }
+        }
         Ok(())
     }
 
