@@ -6,8 +6,8 @@ Rust client for interacting directly with the Flashbots RPC endpoint.
 
 Using a client from the [reqwest](https://crates.io/crates/reqwest) crate, you can use a set of methods to interact with the following Flashbots relays endpoints:
 
-- [ ] `eth_sendBundle`
-- [ ] `eth_callBundle`
+- [X] `eth_sendBundle`
+- [X] `eth_callBundle`
 - [X] `eth_sendPrivateTransaction`
 - [X] `eth_cancelPrivateTransaction`
 - [X] `flashbots_getUserStats`
