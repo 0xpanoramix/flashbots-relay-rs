@@ -8,8 +8,8 @@ Using a client from the [reqwest](https://crates.io/crates/reqwest) crate, you c
 
 - [ ] `eth_sendBundle`
 - [ ] `eth_callBundle`
-- [ ] `eth_sendPrivateTransaction`
-- [ ] `eth_cancelPrivateTransaction`
+- [X] `eth_sendPrivateTransaction`
+- [X] `eth_cancelPrivateTransaction`
 - [X] `flashbots_getUserStats`
 - [X] `flashbots_getBundleStats`
 
