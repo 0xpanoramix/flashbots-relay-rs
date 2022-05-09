@@ -1,6 +1,6 @@
 use ethers_signers::{LocalWallet, Signer};
 use reqwest::header::HeaderMap;
-use reqwest::{Client, ClientBuilder};
+use reqwest::{Client, ClientBuilder, Response};
 use serde_json::{json, Value};
 use sha3::{Digest, Keccak256};
 
@@ -58,6 +58,32 @@ impl Requester {
         })
     }
 
+    async fn call_with_flashbots_signature(
+        &self,
+        method: &str,
+        private_key: &LocalWallet,
+        request_params: Vec<Value>,
+    ) -> Result<Response, Box<dyn std::error::Error>> {
+        let request_payload = self.new_request_payload(method, request_params);
+
+        // Sign the payload.
+        let payload_signature = self
+            .sign_request_payload(private_key, &request_payload)
+            .await?;
+        let signature = format!("{:#?}:0x{}", private_key.address(), payload_signature);
+
+        // Send the request.
+        let response = self
+            .client
+            .post(&self.base_url)
+            .header(FLASHBOTS_AUTH_HEADER_NAME, signature)
+            .json(&request_payload)
+            .send()
+            .await?;
+
+        Ok(response)
+    }
+
     pub async fn get_user_stats(
         &self,
         private_key: &str,
@@ -69,19 +95,10 @@ impl Requester {
         // Prepare the payload for POST request.
         let request_params: Vec<Value> =
             vec![serde_json::to_value(format!("0x{:x}", block_number)).unwrap()];
-        let request_payload = self.new_request_payload("flashbots_getUserStats", request_params);
 
-        // Sign the payload.
-        let payload_signature = self.sign_request_payload(&wallet, &request_payload).await?;
-        let signature = format!("{:#?}:0x{}", wallet.address(), payload_signature);
-
-        // Send the request.
+        // Call te relay.
         let response = self
-            .client
-            .post(&self.base_url)
-            .header(FLASHBOTS_AUTH_HEADER_NAME, signature)
-            .json(&request_payload)
-            .send()
+            .call_with_flashbots_signature("flashbots_getUserStats", &wallet, request_params)
             .await?;
 
         // Parse the response and return the data.
@@ -102,19 +119,10 @@ impl Requester {
             serde_json::to_value(&params.block_hash).unwrap(),
             serde_json::to_value(&params.block_number).unwrap(),
         ];
-        let request_payload = self.new_request_payload("flashbots_getBundleStats", request_params);
 
-        // Sign the payload.
-        let payload_signature = self.sign_request_payload(&wallet, &request_payload).await?;
-        let signature = format!("{:#?}:0x{}", wallet.address(), payload_signature);
-
-        // Send the request.
+        // Call te relay.
         let response = self
-            .client
-            .post(&self.base_url)
-            .header(FLASHBOTS_AUTH_HEADER_NAME, signature)
-            .json(&request_payload)
-            .send()
+            .call_with_flashbots_signature("flashbots_getBundleStats", &wallet, request_params)
             .await?;
 
         // Parse the response and return the data.
