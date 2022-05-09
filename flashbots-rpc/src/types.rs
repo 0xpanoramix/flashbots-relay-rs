@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// The response for flashbots_getUserStats.
 #[derive(Deserialize, Debug)]
@@ -13,9 +13,12 @@ pub struct UserStats {
 }
 
 /// The params used to query flashbots_getBundleStats.
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct FlashbotsGetBundleStatsParam {
+    #[serde(rename = "blockNumber")]
     pub block_number: String,
+
+    #[serde(rename = "blockHash")]
     pub block_hash: String,
 }
 

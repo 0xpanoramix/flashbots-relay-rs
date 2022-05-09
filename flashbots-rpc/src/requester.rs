@@ -115,9 +115,12 @@ impl Requester {
         let wallet = private_key.parse::<LocalWallet>()?;
 
         // Prepare the payload for POST request.
+        // let request_params: Vec<Value> = vec![
+        //    serde_json::to_value(&params.block_hash).unwrap(),
+        //    serde_json::to_value(&params.block_number).unwrap(),
+        // ];
         let request_params: Vec<Value> = vec![
-            serde_json::to_value(&params.block_hash).unwrap(),
-            serde_json::to_value(&params.block_number).unwrap(),
+            serde_json::to_value(&params).unwrap(),
         ];
 
         // Call te relay.
