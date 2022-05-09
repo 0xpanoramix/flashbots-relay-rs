@@ -6,9 +6,9 @@ use sha3::{Digest, Keccak256};
 
 use crate::constants::{FLASHBOTS_AUTH_HEADER_NAME, FLASHBOTS_RELAY_RPC_ENDPOINT};
 use crate::types::{
-    BundleStats, CancelledPrivateTransactionResponse, FlashbotsCancelPrivateTransactionParam,
-    FlashbotsGetBundleStatsParam, FlashbotsSendPrivateTransactionParam,
-    SentPrivateTransactionResponse, UserStats,
+    BundleStats, FlashbotsCancelPrivateTransactionParam, FlashbotsEthResponse,
+    FlashbotsGetBundleStatsParam, FlashbotsSendBundleParam, FlashbotsSendPrivateTransactionParam,
+    SendBundleResponse, UserStats,
 };
 
 #[derive(Clone, Debug)]
@@ -136,7 +136,7 @@ impl Requester {
         &self,
         private_key: &str,
         params: &FlashbotsSendPrivateTransactionParam,
-    ) -> Result<SentPrivateTransactionResponse, Box<dyn std::error::Error>> {
+    ) -> Result<FlashbotsEthResponse<String>, Box<dyn std::error::Error>> {
         // Loads the ethereum wallet.
         let wallet = private_key.parse::<LocalWallet>()?;
 
@@ -149,7 +149,7 @@ impl Requester {
             .await?;
 
         // Parse the response and return the data.
-        let tx_hash: SentPrivateTransactionResponse = response.json().await?;
+        let tx_hash: FlashbotsEthResponse<String> = response.json().await?;
         Ok(tx_hash)
     }
 
@@ -157,7 +157,7 @@ impl Requester {
         &self,
         private_key: &str,
         params: &FlashbotsCancelPrivateTransactionParam,
-    ) -> Result<CancelledPrivateTransactionResponse, Box<dyn std::error::Error>> {
+    ) -> Result<FlashbotsEthResponse<bool>, Box<dyn std::error::Error>> {
         // Loads the ethereum wallet.
         let wallet = private_key.parse::<LocalWallet>()?;
 
@@ -170,7 +170,28 @@ impl Requester {
             .await?;
 
         // Parse the response and return the data.
-        let result: CancelledPrivateTransactionResponse = response.json().await?;
+        let result: FlashbotsEthResponse<bool> = response.json().await?;
+        Ok(result)
+    }
+
+    pub async fn send_bundle(
+        &self,
+        private_key: &str,
+        params: &FlashbotsSendBundleParam,
+    ) -> Result<FlashbotsEthResponse<SendBundleResponse>, Box<dyn std::error::Error>> {
+        // Loads the ethereum wallet.
+        let wallet = private_key.parse::<LocalWallet>()?;
+
+        // Prepare the payload for POST request.
+        let request_params: Vec<Value> = vec![serde_json::to_value(&params).unwrap()];
+
+        // Call te relay.
+        let response = self
+            .call_with_flashbots_signature("eth_sendBundle", &wallet, request_params)
+            .await?;
+
+        // Parse the response and return the data.
+        let result: FlashbotsEthResponse<SendBundleResponse> = response.json().await?;
         Ok(result)
     }
 }

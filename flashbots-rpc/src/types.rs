@@ -1,17 +1,16 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
-pub struct SentPrivateTransactionResponse {
+pub struct FlashbotsEthResponse<T> {
     pub jsonrpc: String,
     pub id: u64,
-    pub result: String,
+    pub result: T,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct CancelledPrivateTransactionResponse {
-    pub jsonrpc: String,
-    pub id: u64,
-    pub result: bool,
+pub struct SendBundleResponse {
+    #[serde(rename = "bundleHash")]
+    pub bundle_hash: String,
 }
 
 /// The response for flashbots_getUserStats.
@@ -80,4 +79,22 @@ pub struct FlashbotsSendPrivateTransactionParam {
 pub struct FlashbotsCancelPrivateTransactionParam {
     #[serde(rename = "txHash")]
     pub tx_hash: String,
+}
+
+/// The params used to query eth_sendBundle.
+#[derive(Serialize, Debug)]
+pub struct FlashbotsSendBundleParam {
+    pub txs: Vec<String>,
+
+    #[serde(rename = "blockNumber")]
+    pub block_number: String,
+
+    #[serde(rename = "minTimestamp", skip_serializing_if = "Option::is_none")]
+    pub min_timestamp: Option<u64>,
+
+    #[serde(rename = "maxTimestamp", skip_serializing_if = "Option::is_none")]
+    pub max_timestamp: Option<u64>,
+
+    #[serde(rename = "revertingTxHashes", skip_serializing_if = "Option::is_none")]
+    pub reverting_tx_hashes: Option<Vec<String>>,
 }
