@@ -1,6 +1,6 @@
-# <h1 align="center"> flashbots-rpc-rs </h1>
+# <h1 align="center"> flashbots-relay-rs </h1>
 
-Rust client for interacting directly with the Flashbots RPC endpoint.
+Rust client for interacting directly with the Flashbots Relays.
 
 ## How does it work ?
 
@@ -16,6 +16,9 @@ Using a client from the [reqwest](https://crates.io/crates/reqwest) crate, you c
 It uses [ethers-rs](https://github.com/gakonst/ethers-rs) to perform ECDSA signatures and the main inspiration when it comes to code architecture comes from the [opensea-rs](https://github.com/gakonst/opensea-rs) project.
 
 So, thanks [Georgios K.](https://github.com/gakonst) for the indirect help !
+
+Huge thanks to [Chris H.](https://github.com/metachris/) for his work on [the golang version of the client](https://github.com/metachris/flashbotsrpc).
+I developed this project based on his version.
 
 ## Getting started !
 

@@ -1,5 +1,5 @@
 [package]
-name = "flashbots-rpc"
+name = "flashbots-relay"
 version = "0.1.0"
 edition = "2021"
 
