@@ -22,6 +22,10 @@ I developed this project based on his version.
 
 ## Getting started !
 
+### 🚧 The project is still under dev. 🚧
+
+Please be careful when using it and don't use it in main net for now.
+
 ### Installation
 
 TODO.
