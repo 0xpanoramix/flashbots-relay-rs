@@ -1,5 +1,7 @@
 # <h1 align="center"> flashbots-relay-rs </h1>
 
+### 🚧 THIS PROJECT IS NOT PRODUCTION READY, [USE THIS ONE INSTEAD](https://github.com/onbjerg/ethers-flashbots) 🚧
+
 Rust client for interacting directly with the Flashbots Relays.
 
 ## How does it work ?
